@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from dateutil import parser
 from math import pi
+import statsmodels.api as sm
 
 # ==============================================================================
 # 1. CHARGEMENT ET NETTOYAGE DES DONNÉES (LECTURE 2)
@@ -176,4 +177,93 @@ plt.xlabel("Nombre de Défauts de Catégorie 2 (Variable Explicative $X$)", font
 plt.ylabel("Score Final (Variable Cible $Y$)", fontsize=12)
 plt.tight_layout()
 plt.savefig("4_Regression_defauts_vs_score.png")
+plt.show()
+
+
+df = pd.read_csv("df_arabica_clean.csv")
+
+processing_mapping = {
+    "Double Anaerobic Washed": "Washed / Wet",
+    "Semi Washed": "Washed / Wet",
+    "Honey,Mossto": "Pulped natural / honey",
+    "Double Carbonic Maceration / Natural": "Natural / Dry",
+    "Wet Hulling": "Washed / Wet",
+    "Anaerobico 1000h": "Washed / Wet",
+    "SEMI-LAVADO": "Natural / Dry"
+}
+df['Processing Method'] = df['Processing Method'].replace(processing_mapping).fillna("Washed / Wet")
+
+df.loc[df['ID'] == 99, 'Altitude'] = 5273 / 3.281  
+df.loc[df['ID'] == 105, 'Altitude'] = 1800  
+df.loc[df['ID'] == 180, 'Altitude'] = 1400  
+
+def clean_altitude_range(range_value):
+    if isinstance(range_value, str):
+        range_value = range_value.replace(" ", "")
+        if '-' in range_value:
+            try:
+                start, end = range_value.split('-')
+                return (int(start) + int(end)) / 2
+            except ValueError:
+                return np.nan
+        else:
+            try:
+                return int(range_value)
+            except ValueError:
+                return np.nan
+    return range_value
+
+df['Altitude'] = df['Altitude'].apply(clean_altitude_range)
+df.loc[df['Altitude'] > 4000, 'Altitude'] = np.nan
+
+df['Harvest Year'] = df['Harvest Year'].astype(str).str.split('/').str[0].str.strip()
+df['Harvest Year'] = pd.to_datetime(df['Harvest Year'], format='%Y', errors='coerce')
+df['Expiration'] = df['Expiration'].apply(lambda x: parser.parse(x) if pd.notnull(x) else np.nan)
+df['Coffee Age'] = (df['Expiration'] - df['Harvest Year']).dt.days
+
+# Filtrage des lignes sans valeurs manquantes pour nos variables d'intérêt
+df_reg = df.dropna(subset=['Total Cup Points', 'Altitude', 'Category Two Defects', 'Coffee Age']).copy()
+
+
+# ==============================================================================
+# 2. CALCUL DE L'INDICE COMPOSITE VIA LA RÉGRESSION MULTIPLE
+# ==============================================================================
+
+X_cols = ['Altitude', 'Category Two Defects', 'Coffee Age']
+X = df_reg[X_cols]
+X_with_const = sm.add_constant(X)
+y = df_reg['Total Cup Points']
+
+# Entraînement du modèle OLS
+model = sm.OLS(y, X_with_const).fit()
+
+# L'indice combiné correspond à la valeur prédite par le modèle pour chaque café
+df_reg['Indice_Combine'] = model.predict(X_with_const)
+
+
+# ==============================================================================
+# 3. GÉNÉRATION ET SAUVEGARDE DU GRAPHIQUE UNIQUE
+# ==============================================================================
+
+sns.set_theme(style="whitegrid")
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Droite de régression linéaire simple entre l'indice combiné et la vraie note
+sns.regplot(data=df_reg, x='Indice_Combine', y='Total Cup Points', ax=ax,
+            scatter_kws={'alpha': 0.6, 'color': '#1f77b4', 's': 50},
+            line_kws={'color': '#d62728', 'linewidth': 2.5})
+
+# Ajout d'une ligne de repère grise diagonale (Modèle idéal : Réel = Prédit)
+min_val = min(df_reg['Indice_Combine'].min(), df_reg['Total Cup Points'].min())
+max_val = max(df_reg['Indice_Combine'].max(), df_reg['Total Cup Points'].max())
+ax.plot([min_val, max_val], [min_val, max_val], linestyle='--', color='gray', alpha=0.7, label='Ligne de perfection (Y = X)')
+
+# Personnalisation des titres et étiquettes
+ax.set_title("L'Indice Composite (Prédictions vs Réel)\nCombinaison optimale de l'Altitude, des Défauts et de l'Âge", fontsize=12, fontweight='bold', pad=15)
+ax.set_xlabel("Indice Combiné Optimisé (Score Prédit $\hat{Y}$)", fontsize=11)
+ax.set_ylabel("Qualité Réelle (Total Cup Points $Y$)", fontsize=11)
+ax.legend()
+
+plt.tight_layout()
+plt.savefig("graphe_gauche_indice_composite.png")
 plt.show()
