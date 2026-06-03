@@ -1,0 +1,547 @@
+% ============================================================
+%  RAPPORT — Introduction au Traitement de Données
+%  « L'anatomie d'un grand café arabica »
+%  MAM3 — Polytech Nice Sophia — 2025-2026
+% ============================================================
+\documentclass[12pt,a4paper]{article}
+
+% ---- Packages ----
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french,english]{babel}
+\usepackage{charter}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{mdframed}
+\usepackage{tcolorbox}
+\usepackage{wrapfig}
+\usepackage{multirow}
+
+% ---- Couleurs thème café ----
+\definecolor{coffeebrown}{RGB}{74,44,42}
+\definecolor{coffeemedium}{RGB}{123,79,46}
+\definecolor{coffeecream}{RGB}{245,230,200}
+\definecolor{coffeegold}{RGB}{212,168,67}
+\definecolor{accentgreen}{RGB}{92,122,62}
+\definecolor{lightgray}{RGB}{245,245,245}
+
+% ---- Hyperref ----
+\hypersetup{
+  colorlinks=true,
+  linkcolor=coffeebrown,
+  citecolor=accentgreen,
+  urlcolor=coffeemedium,
+  pdftitle={L'anatomie d'un grand café arabica},
+  pdfauthor={MAM3 — Polytech Nice Sophia}
+}
+
+% ---- En-têtes / Pieds de page ----
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{coffeebrown}{\textit{Introduction au Traitement de Données — MAM3}}}
+\fancyhead[R]{\small\textcolor{coffeebrown}{\thepage}}
+\fancyfoot[C]{\small\textcolor{gray}{\textit{Polytech Nice Sophia — 2025-2026}}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{coffeebrown}\leaders\hrule height \headrulewidth\hfill}}
+
+% ---- Titres de section ----
+\titleformat{\section}
+  {\Large\bfseries\color{coffeebrown}}
+  {\thesection.}{0.5em}{}[\vspace{2pt}\color{coffeegold}\hrule height 1.5pt\vspace{4pt}]
+
+\titleformat{\subsection}
+  {\large\bfseries\color{coffeemedium}}
+  {\thesubsection.}{0.5em}{}
+
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{accentgreen}}
+  {\thesubsubsection.}{0.5em}{}
+
+% ---- Boîtes de mise en valeur ----
+\tcbuselibrary{skins,breakable}
+\newtcolorbox{insight}{
+  enhanced,colback=coffeecream,colframe=coffeebrown,
+  fonttitle=\bfseries\color{coffeebrown},
+  title=Insight clé,arc=4pt,boxrule=1pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt
+}
+\newtcolorbox{methode}{
+  enhanced,colback=lightgray,colframe=accentgreen,
+  fonttitle=\bfseries\color{accentgreen},
+  title=Méthode,arc=4pt,boxrule=1pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt
+}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ---- Page de titre ----
+\begin{titlepage}
+\begin{center}
+\vspace*{1cm}
+{\color{coffeebrown}\rule{\linewidth}{2pt}}\\[0.4cm]
+{\Huge\bfseries\color{coffeebrown} L'anatomie d'un grand café arabica}\\[0.3cm]
+{\Large\color{coffeemedium}\textit{Quels critères définissent objectivement un café d'exception ?}}\\[0.4cm]
+{\color{coffeebrown}\rule{\linewidth}{2pt}}\\[1.5cm]
+
+\includegraphics[width=0.55\linewidth]{fig1_correlogram.png}\\[1cm]
+
+\begin{tabular}{rl}
+\textbf{\color{coffeebrown}Cours :} & Introduction au Traitement de Données\\
+\textbf{\color{coffeebrown}Formation :} & MAM3 — Mathématiques Appliquées et Modélisation\\
+\textbf{\color{coffeebrown}Établissement :} & Polytech Nice Sophia — Université Côte d'Azur\\
+\textbf{\color{coffeebrown}Année :} & 2025-2026\\
+\textbf{\color{coffeebrown}Dataset :} & CQI Arabica Coffee Quality Dataset (Kaggle)\\
+\textbf{\color{coffeebrown}Dépôt Git :} & \href{https://github.com/}{[URL du dépôt Git]}
+\end{tabular}\\[2cm]
+
+\end{center}
+\end{titlepage}
+
+% ---- Table des matières ----
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Business Goal — Le café, un objet de science}
+% ============================================================
+
+\subsection{Contexte et motivation}
+
+Le café est l'une des boissons les plus consommées au monde, avec plus de 2,5 milliards de tasses
+bues chaque jour. Pourtant, la frontière entre un café ordinaire et un café d'\emph{exception}
+reste souvent floue pour le consommateur. Pour les professionnels du secteur — torréfacteurs,
+importateurs, baristas — cette question est au cœur de décisions économiques majeures.
+
+Le \textbf{Coffee Quality Institute (CQI)} propose un protocole d'évaluation sensorielle
+rigoureux, le \emph{cupping score}, qui décompose la qualité d'un café en huit critères objectifs,
+chacun noté de 6 à 10. Le score total (\textit{Total Cup Points}) est la somme de ces sous-scores.
+Un café atteignant 80 points ou plus est qualifié de \emph{Specialty Coffee} — la crème de la crème.
+
+\begin{insight}
+  \textbf{Question de recherche :} Quels sont les facteurs — sensoriels, géographiques,
+  variétaux et agronomiques — qui permettent de prédire et d'expliquer la qualité d'un café arabica
+  noté par le CQI ?
+\end{insight}
+
+\subsection{Utilité du dataset}
+
+Le dataset \texttt{df\_arabica\_clean.csv} (source : Kaggle, CQI) regroupe \textbf{207 échantillons}
+de cafés arabica certifiés, notés entre 2021 et 2023, provenant de \textbf{23 pays}.
+Il constitue une source idéale pour répondre à notre question car :
+\begin{itemize}[noitemsep]
+  \item Les notes sensorielles sont \textbf{standardisées} par des juges certifiés Q-Grader ;
+  \item Il couvre une grande diversité géographique, variétale et de méthodes de traitement ;
+  \item Il comprend à la fois des variables continues, catégorielles et des données de défauts,
+        permettant une \textbf{ingénierie de features} riche.
+\end{itemize}
+
+% ============================================================
+\section{Gestion d'équipe}
+% ============================================================
+
+\subsection{Organisation du travail}
+
+Le travail a été organisé en phases successives, calées sur le calendrier du cours.
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\rowcolor{coffeecream}
+\textbf{Phase} & \textbf{Tâche principale} & \textbf{Date} \\
+\midrule
+1 & Choix du dataset, formulation de la question & 01/06/2026 \\
+2 & Nettoyage, wrangling, exploration & 01/06/2026 \\
+3 & Visualisation et storytelling & 02/06/2026 \\
+4 & Feature engineering, régression & 02--03/06/2026 \\
+5 & Rédaction du rapport, préparation des slides & 04/06/2026 \\
+6 & Soutenance orale & 05/06/2026 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Répartition des rôles}
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Membre 1} — Chargé(e) de l'exploration des données, de la visualisation et
+        du storytelling ;
+  \item \textbf{Membre 2} — Chargé(e) du feature engineering et de la régression ;
+  \item \textbf{Membre 3} — Chargé(e) de la rédaction du rapport et de la préparation des slides.
+\end{itemize}
+
+% ============================================================
+\section{Description des données}
+% ============================================================
+
+\subsection{Vue d'ensemble}
+
+Le dataset contient \textbf{207 lignes} et \textbf{41 colonnes}, couvrant trois familles de variables :
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\rowcolor{coffeecream}
+\textbf{Famille} & \textbf{Variables clés} & \textbf{Type} \\
+\midrule
+\textbf{Identité} & Pays, Région, Ferme, Variété, Propriétaire & Catégorielle / texte \\
+\textbf{Agronomique} & Altitude, Méthode de traitement, Couleur, Humidité & Numérique / catég. \\
+\textbf{Sensorielle} & Aroma, Flavor, Aftertaste, Acidity, Body, Balance, & Numérique [6--10] \\
+& Uniformity, Clean Cup, Sweetness, Overall, Total Cup & \\
+\textbf{Défauts} & Category One Defects, Category Two Defects, Quakers & Entier \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Statistiques descriptives des critères sensoriels}
+
+\begin{center}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\rowcolor{coffeecream}
+\textbf{Critère} & \textbf{Min} & \textbf{Q1} & \textbf{Médiane} & \textbf{Moyenne} & \textbf{Max} \\
+\midrule
+Aroma        & 6.50 & 7.58 & 7.67 & 7.72 & 8.58 \\
+Flavor       & 6.75 & 7.58 & 7.75 & 7.74 & 8.50 \\
+Aftertaste   & 6.67 & 7.42 & 7.58 & 7.60 & 8.42 \\
+Acidity      & 6.83 & 7.50 & 7.67 & 7.69 & 8.58 \\
+Body         & 6.83 & 7.50 & 7.67 & 7.64 & 8.25 \\
+Balance      & 6.67 & 7.50 & 7.67 & 7.64 & 8.42 \\
+\midrule
+\textbf{Total Cup Points} & 78.00 & 82.58 & 83.75 & 83.71 & 89.33 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Note :} Les critères \textit{Uniformity}, \textit{Clean Cup} et \textit{Sweetness}
+présentent des variances quasi nulles (presque tous égaux à 10 dans ce dataset premium), ce qui
+explique leur faible pouvoir prédictif.
+
+\subsection{Nettoyage et wrangling}
+
+\begin{itemize}[noitemsep]
+  \item L'\textbf{altitude} est fournie comme texte libre ; elle a été convertie en numérique
+        (\texttt{pd.to\_numeric(..., errors=`coerce')}), aboutissant à 153 valeurs valides sur 207.
+  \item Les \textbf{méthodes de traitement} rares ($n = 1$) ont été regroupées en une catégorie
+        « Autres » pour les analyses comparatives.
+  \item La \textbf{couleur} des grains présente des incohérences typographiques (\textit{yellow green}
+        vs \textit{yellow-green}) ; un nettoyage par normalisation de chaînes a été appliqué.
+  \item \textbf{Aucune ligne n'a été supprimée} pour les analyses sensorielles (207 valeurs complètes).
+\end{itemize}
+
+% ============================================================
+\section{Visualisation des données}
+% ============================================================
+
+\subsection{Corrélations entre les critères sensoriels}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.72\textwidth]{fig1_correlogram.png}
+  \caption{Corrélogramme triangulaire inférieur des huit critères sensoriels (n\,=\,207).
+           Les couleurs chaudes indiquent une forte corrélation positive.}
+  \label{fig:corr}
+\end{figure}
+
+La figure~\ref{fig:corr} révèle que tous les critères sensoriels sont \textbf{fortement corrélés
+entre eux} ($r > 0.70$ pour la plupart), et en particulier avec le score total.
+Les corrélations les plus élevées avec le \textit{Total Cup Points} sont :
+\textit{Overall} ($r = 0.95$), \textit{Flavor} ($r = 0.94$), \textit{Aftertaste} ($r = 0.93$)
+et \textit{Balance} ($r = 0.93$).
+
+\begin{insight}
+  Un café arabica de qualité est un équilibre : aucun critère isolé ne suffit. La force du
+  \textit{Flavor} et de l'\textit{Aftertaste} sont cependant les signaux les plus discriminants.
+\end{insight}
+
+\subsection{Profil sensoriel selon la méthode de traitement}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.62\textwidth]{fig2_radar.png}
+  \caption{Diagramme radar des profils sensoriels moyens selon la méthode de traitement.
+           Les cafés « Natural/Dry » se distinguent par un Aroma et un Body plus prononcés.}
+  \label{fig:radar}
+\end{figure}
+
+La figure~\ref{fig:radar} compare trois méthodes : voie humide (\textit{Washed}),
+voie sèche (\textit{Natural}) et processus intermédiaire (\textit{Honey/Pulped}).
+On observe que les cafés traités en voie sèche tendent à présenter un \textbf{arôme et un corps
+plus intenses}, tandis que les cafés lavés sont plus équilibrés sur l'ensemble des critères.
+
+\subsection{Scores par pays d'origine}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth]{fig3_countries.png}
+  \caption{Distribution du \textit{Total Cup Points} pour les 12 pays les plus représentés.
+           Les boîtes à moustaches sont ordonnées par médiane croissante. La ligne pointillée
+           indique la moyenne globale (83,7 pts).}
+  \label{fig:pays}
+\end{figure}
+
+L'\textbf{Éthiopie} et la \textbf{Tanzanie} dominent le classement en termes de score médian
+(respectivement 85,0 et 84,7 pts), loin devant le Brésil et El Salvador qui peinent à dépasser
+82 pts en médiane. Taiwan, très représenté ($n=61$), affiche une médiane élevée (84,4 pts) avec une
+grande dispersion, témoignant d'une filière dynamique mais hétérogène.
+
+\subsection{Influence de l'altitude}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth]{fig4_altitude.png}
+  \caption{\textit{Gauche :} nuage de points altitude/score avec droite de régression.
+           \textit{Droite :} score moyen (± IC à 95\,\%) par tranche d'altitude.
+           La tendance positive est faible mais régulière au-delà de 1600\,m.}
+  \label{fig:alt}
+\end{figure}
+
+La corrélation brute altitude-score est modeste ($r = 0.10$), mais la figure~\ref{fig:alt}
+révèle un effet de seuil : les cafés cultivés \textbf{au-delà de 1800\,m} obtiennent en moyenne
+\textbf{84,8 pts}, soit +1,3 pt par rapport aux cafés cultivés sous 1000\,m (83,5 pts).
+La faible corrélation s'explique par la multiplicité des facteurs confondants (pays, variété,
+méthode de traitement).
+
+% ============================================================
+\section{Feature Engineering}
+% ============================================================
+
+\subsection{Variables directement disponibles (features brutes)}
+
+Les six critères sensoriels (\textit{Aroma, Flavor, Aftertaste, Acidity, Body, Balance}) constituent
+nos features principales. Ils sont tous sur la même échelle [6--10] et normalement distribués,
+ce qui facilite l'application d'une régression linéaire.
+
+\subsection{Features construites}
+
+\subsubsection{Score de qualité sensorielle globale}
+
+Inspiré du pipeline de feature engineering du cours (Lecture 4), nous construisons un
+\textbf{indice de qualité composite} :
+
+\begin{equation}
+  \text{Sensory\_Score} = \frac{\text{Flavor} + \text{Aftertaste} + \text{Balance}}{3}
+\end{equation}
+
+Ce triplet concentre les critères les plus corrélés au score final et permet une réduction
+de dimensionnalité sans perte d'information majeure.
+
+\subsubsection{Pénalité de défauts}
+
+En nous inspirant de l'exemple de détection de fraude bancaire (Lecture 4 : $z = x_1^2 + x_2^2$),
+nous créons une variable synthétique combinant les deux types de défauts :
+
+\begin{equation}
+  \text{Defect\_Penalty} = \text{Cat1\_Defects} \times 4 + \text{Cat2\_Defects} + \text{Quakers}
+\end{equation}
+
+La pondération (×4 pour les défauts de catégorie 1) reflète leur impact sensoriel plus sévère.
+
+\subsubsection{Encodage de l'altitude}
+
+L'altitude brute est convertie en une variable ordinale \textit{Altitude\_Band} (6 niveaux),
+puis one-hot encodée, conformément aux recommandations du cours (Lecture 2) sur les données
+ordinales à plusieurs catégories.
+
+\subsubsection{Encodage de la méthode de traitement}
+
+Les trois méthodes principales (\textit{Washed}, \textit{Natural}, \textit{Honey/Pulped})
+sont encodées par one-hot encoding (Lecture 2), les méthodes rares ($n=1$) étant regroupées
+dans une catégorie « Autres ».
+
+\subsection{Vérification de la pertinence des features}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{fig5_varieties.png}
+    \caption{Score par variété (violon)}
+    \label{fig:var}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{fig7_defects.png}
+    \caption{Impact des défauts sur le score}
+    \label{fig:def}
+  \end{subfigure}
+  \caption{Pertinence de deux features construites. La variété \textit{Gesha} se démarque
+           clairement (médiane $\approx$ 85,4 pts). Les défauts de catégorie 2 et les
+           \textit{Quakers} montrent une corrélation négative marquée ($r = -0.32$ et $r = -0.32$).}
+\end{figure}
+
+% ============================================================
+\section{Régression linéaire et logistique}
+% ============================================================
+
+\subsection{Régression linéaire : prédire le score total}
+
+\subsubsection{Modèle}
+
+Nous appliquons une régression linéaire multiple (Lecture 4) :
+
+\begin{equation}
+  \widehat{\text{TCP}} = \beta_0 + \beta_1 \cdot \text{Aroma} + \beta_2 \cdot \text{Flavor}
+  + \beta_3 \cdot \text{Aftertaste} + \beta_4 \cdot \text{Acidity}
+  + \beta_5 \cdot \text{Body} + \beta_6 \cdot \text{Balance} + \varepsilon
+\end{equation}
+
+Les variables sont standardisées (\textit{StandardScaler}) avant l'estimation pour pouvoir
+comparer les coefficients.
+
+\subsubsection{Résultats}
+
+\begin{center}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\rowcolor{coffeecream}
+\textbf{Critère} & \textbf{Coefficient standardisé} & \textbf{Interprétation} \\
+\midrule
+Flavor      & 0.345 & Critère le plus influent \\
+Aroma       & 0.333 & \\
+Aftertaste  & 0.331 & \\
+Balance     & 0.322 & \\
+Acidity     & 0.309 & \\
+Body        & 0.252 & Critère le moins influent \\
+\midrule
+Intercept   & 83.71 & Score moyen de référence \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.72\textwidth]{fig6_regression.png}
+  \caption{Importance relative des critères sensoriels (coefficients standardisés de la régression
+           linéaire). Un coefficient plus élevé signifie qu'une augmentation d'un écart-type du
+           critère entraîne une plus forte hausse du score total.}
+  \label{fig:reg}
+\end{figure}
+
+\textbf{Performance du modèle :}
+\begin{itemize}[noitemsep]
+  \item $R^2 = 0.993$ (sur données d'entraînement) — le modèle explique 99,3\,\% de la variance ;
+  \item $R^2_{\text{CV}} = 0.676$ (validation croisée 5-fold) — performance robuste hors-échantillon ;
+  \item $\text{RMSE} = 0.149$ point — l'erreur de prédiction est inférieure à 0,15 point.
+\end{itemize}
+
+\begin{methode}
+  La différence entre $R^2 = 0.99$ (in-sample) et $R^2_{\text{CV}} = 0.68$ (out-of-sample)
+  s'explique par le fait que le \textit{Total Cup Points} est quasi-mécaniquement la somme des
+  sous-scores dans le protocole CQI. Le modèle de régression est donc une quasi-tautologie :
+  il capture la structure même du scoring CQI. Pour prédire la qualité d'un café \textit{avant
+  le cupping} (à partir de l'altitude, du pays, de la variété), un $R^2$ de 0.68 est en revanche
+  réaliste.
+\end{methode}
+
+\subsection{Régression logistique : identifier les cafés d'exception}
+
+\subsubsection{Définition de la cible}
+
+Nous définissons un café comme \textbf{d'exception} si son score dépasse 84 points :
+
+\begin{equation}
+  Y = \mathbf{1}[\text{Total Cup Points} \geq 84]
+\end{equation}
+
+Sur le dataset, 93 cafés (44,9\,\%) atteignent ce seuil.
+
+\subsubsection{Modèle LOGIT}
+
+Conformément au cours (Lecture 4) :
+
+\begin{equation}
+  \ln\left(\frac{P(Y=1|X)}{1-P(Y=1|X)}\right)
+  = \beta_0 + \beta_1 \cdot \text{Aroma} + \cdots + \beta_6 \cdot \text{Balance}
+\end{equation}
+
+\subsubsection{Résultats}
+
+\begin{center}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\rowcolor{coffeecream}
+\textbf{Critère} & \textbf{Coefficient logistique} \\
+\midrule
+Aftertaste  & 1.804 \\
+Acidity     & 1.615 \\
+Aroma       & 1.546 \\
+Body        & 1.399 \\
+Flavor      & 1.189 \\
+Balance     & 1.186 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Performance :} Précision en validation croisée 5-fold = \textbf{89.9\,\%}.
+L'\textit{Aftertaste} et l'\textit{Acidity} sont les deux critères qui permettent le mieux de
+distinguer un café d'exception d'un café ordinaire.
+
+% ============================================================
+\section{Conclusion}
+% ============================================================
+
+\subsection{Enseignements de l'analyse}
+
+Notre analyse du dataset CQI Arabica apporte des réponses concrètes à la question
+\textit{« Quels critères définissent objectivement un café d'exception ? »} :
+
+\begin{enumerate}
+  \item \textbf{Le Flavor et l'Aftertaste} sont les critères sensoriels les plus déterminants :
+        c'est dans la persistance et la complexité des arômes que se joue l'excellence.
+  \item \textbf{L'origine géographique} compte : l'Éthiopie et la Tanzanie produisent
+        structurellement des cafés plus notés, en lien avec leurs terroirs (altitude, variétés
+        locales, pratiques de fermentation).
+  \item \textbf{La variété} \textit{Gesha} se démarque avec un score moyen de 85,4 pts,
+        justifiant son statut de café premium sur les marchés internationaux.
+  \item \textbf{L'altitude élevée} ($> 1800$\,m) est associée à des scores supérieurs,
+        mais l'effet reste modéré et masqué par d'autres facteurs.
+  \item \textbf{Les défauts} (Quakers, défauts de catégorie 2) ont un impact négatif mesurable
+        ($r \approx -0.32$) et constituent une variable prédictive utile.
+
+\end{enumerate}
+
+\subsection{Limites et perspectives}
+
+\begin{itemize}[noitemsep]
+  \item Le dataset ne compte que 207 observations, ce qui limite la puissance statistique,
+        notamment pour les analyses par pays ou variété.
+  \item Les notes CQI sont une mesure subjective (jury de Q-Graders) ; leur variabilité
+        inter-juges n'est pas capturée.
+  \item Une extension naturelle serait d'ajouter des données de \textbf{prix de marché}
+        pour tester si le score CQI prédit effectivement la valeur commerciale du café.
+  \item Un modèle plus sophistiqué (Random Forest, XGBoost) pourrait améliorer la prédiction
+        à partir des seules variables agronomiques (pays, altitude, variété).
+\end{itemize}
+
+% ============================================================
+\section*{Références}
+% ============================================================
+\addcontentsline{toc}{section}{Références}
+
+\begin{enumerate}
+  \item Fillatre, L. (2025-2026). \textit{Introduction to Data Processing — Lectures 1--4}.
+        Polytech Nice Sophia, Université Côte d'Azur.
+  \item Coffee Quality Institute (CQI). \textit{Arabica Coffee Quality Dataset}.
+        Kaggle. \url{https://www.kaggle.com/datasets}
+  \item Wilke, C.O. (2019). \textit{Fundamentals of Data Visualisation}.
+        O'Reilly Media. \url{https://clauswilke.com/dataviz/}
+  \item Pedregosa, F. et al. (2011). Scikit-learn: Machine Learning in Python.
+        \textit{Journal of Machine Learning Research}, 12, 2825--2830.
+  \item Wexler, S., Shaffer, J., \& Cotgreave, A. (2017).
+        \textit{The Big Book of Dashboards}. Wiley.
+\end{enumerate}
+
+\end{document}
