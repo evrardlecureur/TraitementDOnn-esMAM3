@@ -10,7 +10,8 @@ import statsmodels.formula.api as smf
 df = pd.read_csv("df_arabica_clean.csv")
 
 # Correction des altitudes aberrantes
-df.loc[df['ID'] == 99, 'Altitude'] = 5273 / 3.281  
+df['Altitude'] = df['Altitude'].astype(object)
+df.loc[df['ID'] == 99, 'Altitude'] = str(5273 / 3.281)  
 df.loc[df['ID'] == 105, 'Altitude'] = 1800  
 df.loc[df['ID'] == 180, 'Altitude'] = 1400  
 

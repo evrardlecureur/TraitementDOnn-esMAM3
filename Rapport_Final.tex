@@ -98,7 +98,7 @@
 {\Large\color{coffeemedium}\textit{Quels critères définissent objectivement un café d'exception ?}}\\[0.4cm]
 {\color{coffeebrown}\rule{\linewidth}{2pt}}\\[1.5cm]
 
-\includegraphics[width=0.55\linewidth]{fig1_correlogram.png}\\[1cm]
+\includegraphics[width=0.55\linewidth]{figures/1_Matrice_de_correlation.png}\\[1cm]
 
 \begin{tabular}{rl}
 \textbf{\color{coffeebrown}Cours :} & Introduction au Traitement de Données\\
@@ -266,7 +266,7 @@ explique leur faible pouvoir prédictif.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.72\textwidth]{fig1_correlogram.png}
+  \includegraphics[width=0.72\textwidth]{figures/1_Matrice_de_correlation.png}
   \caption{Corrélogramme triangulaire inférieur des huit critères sensoriels (n\,=\,207).
            Les couleurs chaudes indiquent une forte corrélation positive.}
   \label{fig:corr}
@@ -286,7 +286,7 @@ et \textit{Balance} ($r = 0.93$).
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.62\textwidth]{fig2_radar.png}
+  \includegraphics[width=0.62\textwidth]{figures/3_Graphique_radar.png}
   \caption{Diagramme radar des profils sensoriels moyens selon la variété.
            Les cafés « Gesha » se distinguent par un profil gustatif plus prononcé.}
   \label{fig:radar}
@@ -299,7 +299,7 @@ On observe que les cafés Caturra tendent à présenter un arrière-goût plus f
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.90\textwidth]{fig3_countries.png}
+  \includegraphics[width=0.90\textwidth]{figures/fig3_countries.png}
   \caption{Distribution du \textit{Total Cup Points} pour les 12 pays les plus représentés.
            Les boîtes à moustaches sont ordonnées par médiane croissante. La ligne pointillée
            indique la moyenne globale (83,7 pts).}
@@ -324,7 +324,7 @@ Les six critères sensoriels (Aroma, Flavor, Aftertaste, Acidity, Body, Balance)
 
 \subsection{Transformations stratégiques (Features construites)}
 
-Afin d'enrichir nos modèles et de capturer des relations non-linéaires, trois transformations majeures ont été conçues :
+Afin d'enrichir nos modèles et de capturer des relations non-linéaires, quatre transformations majeures ont été conçues :
 
 \begin{itemize}[noitemsep]
   \item Paliers d'Altitude : Afin de modéliser une segmentation climatique potentiellement non-linéaire, l'altitude brute a été discrétisée en 4 classes géographiques et thermiques majeures :
@@ -335,6 +335,7 @@ Afin d'enrichir nos modèles et de capturer des relations non-linéaires, trois 
           \item Très hautes altitudes : $> 1800$\,m
         \end{itemize}
   \item Procédés Harmonisés : Les modes de préparation initiaux, trop fragmentés dans le jeu de données d'origine, ont été regroupés et harmonisés en 3 grandes familles technologiques homogènes : Washed/Wet, Natural/Dry et Pulped natural/honey.
+  \item Macro-Régions : Pour stabiliser les prédictions face à la forte cardinalité des pays d'origine (23 pays), une variable de regroupement géographique a été créée autour de trois grands terroirs climatiques homogènes : Afrique, Amériques et Asie-Pacifique. Ce découpage capture les spécificités bioclimatiques de chaque continent sans diluer l'information dans une multitude de classes rares.
   \item Âge du Café (Facteur temporel) : Création d'une variable temporelle continue calculant le temps précis écoulé entre la date de récolte du lot de café et sa date d'expiration certifiée.
 \end{itemize}
 
@@ -342,67 +343,53 @@ Afin d'enrichir nos modèles et de capturer des relations non-linéaires, trois 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\textwidth]{fig4_altitude.png}
+  \includegraphics[width=0.88\textwidth]{figures/2_Distribution_scores_altitude.png}
   \caption{Distribution réelle des scores finaux selon les tranches d'altitude construites et les méthodes de traitement associées.}
   \label{fig:dist_features}
 \end{figure}
 
 L'analyse croisée de ces nouvelles variables (Figure~\ref{fig:dist_features}) valide notre intuition statistique. On observe un net effet de seuil lié à l'altitude : au-delà de 1800\,m, la moyenne des scores se stabilise à un niveau élevé (84,8 pts). De plus, à très haute altitude, les procédés Washed/Wet et Natural/Dry affichent des comportements plus réguliers, limitant la dispersion des notes vers le bas.
 % ============================================================
-\section{Modélisation - L'Indice de Qualité Composite}
+\section{Modélisation}
 % ============================================================
 
-\subsection{Approche par Fusion Multidimensionnelle}
+\subsection{Prédiction globale : l'Indice de Qualité Composite}
 
-L'objectif de cette modélisation consiste à agréger les paramètres environnementaux, physiques et temporels du café vert au sein d'un indicateur unique. Cet Indice de Qualité Composite vise à anticiper la note globale \textit{Total Cup Points} ($Y$) bien avant les étapes critiques et subjectives de la torréfaction et de la dégustation en tasse.
-
-\subsection{Spécifications du Modèle Global et Variables Intégrées}
-
-Afin de maximiser la variance expliquée sans introduire de biais tautologique ( ce qui reviendrait à utiliser les sous-notes sensorielles pour estimer le score final ), l'analyse s'appuie sur un modèle de régression linéaire multiple (Moindres Carrés Ordinaires) élargi à dix dimensions objectives :
-
-\begin{itemize}[noitemsep]
-  \item \textbf{Six variables numériques :} L'altitude de culture, l'âge du lot, le taux d'humidité (\textit{Moisture Percentage}), les défauts physiques de catégorie 1 et de catégorie 2, ainsi que le décompte des grains \textit{Quakers}.
-  \item \textbf{Quatre variables catégorielles (encodées en One-Hot) :} La méthode de traitement post-récolte, la colorimétrie du grain (ex. \textit{Blue-Green}, \textit{Yellow-Green}), le pays de production et la variété botanique.
-\end{itemize}
-
-L'intégration des variables catégorielles permet à l'algorithme d'isoler mathématiquement l'impact propre à un terroir ou à une lignée génétique spécifique, toutes conditions physiques égales par ailleurs.
-
-En ajustant ce modèle de régression linéaire multiple par la méthode des moindres carrés ordinaires (\texttt{model.fit()}), nous déterminons l'influence mathématique de chaque descripteur. L'équation prédictive de notre Indice Composite se structure ainsi autour des coefficients $\beta$ associés aux caractéristiques physiques et des coefficients $\gamma$ propres aux variables indicatrices (dummies) :
-
-\begin{equation}
-\begin{aligned}
-    \widehat{\text{Score}} = \beta_0 
-    & + \beta_1 \cdot \text{Altitude} + \beta_2 \cdot \text{Coffee\_Age} + \beta_3 \cdot \text{Moisture} \\
-    & + \beta_4 \cdot \text{Defects\_Cat1} + \beta_5 \cdot \text{Quakers} + \beta_6 \cdot \text{Defects\_Cat2} + \sum_{i} \gamma_i \cdot \text{Dummies}_i
-\end{aligned}
-\end{equation}
-\subsection{Analyse des Facteurs Clés et Impacts Opérationnels}
-
-L'examen des coefficients du modèle met en évidence le comportement et l'influence des six variables numériques majeures sur la qualité brute du café :
-
-\begin{itemize}
-  \item \textbf{Pénalisation par les Défauts de Catégorie 2 et les Quakers :} Ces facteurs constituent les principaux vecteurs de dépréciation du score. La présence de grains défectueux ou immatûres engendre une baisse immédiate de l'indice composite, validant rigoureusement l'importance des opérations de tri optique et manuel en usine.
-  \item \textbf{Valorisation par l'Altitude :} Le coefficient positif associé à l'altitude confirme les observations agronomiques de terrain. Les environnements élevés ralentissent le cycle de maturation de la cerise de café, ce qui stimule le développement de précurseurs aromatiques complexes et denses.
-  \item \textbf{Contrôle par les Défauts de Catégorie 1 :} Bien que structurellement plus rares en raison des standards d'exportation, leur inclusion permet de capter les altérations physiques majeures subies par le lot en amont.
-  \item \textbf{Stabilité par l'Humidité et l'Âge du grain :} Ces deux indicateurs décrivent l'état de conservation du café dans le temps. Un taux d'humidité (\textit{Moisture Percentage}) stabilisé, conjugué à un suivi précis de l'âge du lot, assure une bonne résilience de la matière première face aux risques de dégradation enzymatique lors des phases de stockage.
-\end{itemize}
-
-\subsection{Performances Prédictives et Alignement du Modèle}
+Afin d'anticiper la note \textit{Total Cup Points} ($Y$) avant les phases subjectives de dégustation, un modèle de régression linéaire multiple (Moindres Carrés Ordinaires) a été entraîné sur 10 variables exclusivement physiques, géographiques et temporelles : altitude, âge du lot, taux d'humidité, défauts de catégorie 1 et 2, grains Quakers, méthode de traitement, couleur du grain, pays de production et variété botanique (ces quatre dernières encodées en One-Hot).
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.85\textwidth]{score_predit_caracteristiques_physiques.png}
-  \caption{Alignement du modèle étendu : confrontation entre le score composite prédit ($\widehat{Y}$) et la qualité réelle observée ($Total Cup Points$).}
+  \includegraphics[width=0.85\textwidth]{figures/score_predit_caracteristiques_physiques.png}
+  \caption{Confrontation entre le score composite prédit ($\widehat{Y}$) et la qualité réelle observée (\textit{Total Cup Points}).}
   \label{fig:modele_etendu}
 \end{figure}
 
-Comme l'illustre la Figure~\ref{fig:modele_etendu}, l'intégration conjointe du contexte géographique, de la composante botanique et de l'ensemble des descripteurs physiques resserre nettement la dispersion des points autour de la droite de perfection. 
+L'analyse des coefficients révèle que les défauts de catégorie 2 et les Quakers sont les principaux vecteurs de dépréciation du score, tandis que l'altitude agit positivement, en cohérence avec la littérature agronomique. L'âge du lot et l'humidité, bien que secondaires, décrivent l'état de conservation du café.
 
-Grâce à cette approche multidimensionnelle, le coefficient de détermination atteint \textbf{$R^2 = 0.526$}. Expliquer une part aussi significative de la variance d'une évaluation sensorielle humaine ( par nature fluctuante et multifactorielle ) uniquement à partir de caractéristiques techniques mesurables constitue une excellente performance pour un outil d'aide à la décision précoce.
+Comme l'illustre la Figure~\ref{fig:modele_etendu}, ce modèle atteint un coefficient de détermination \textbf{$R^2 = 0.526$}. Expliquer plus de la moitié de la variance d'une évaluation sensorielle humaine uniquement à partir de caractéristiques techniques mesurables constitue une performance solide pour un outil d'aide à la décision précoce.
 
 \begin{insight}
-  Ces résultats valident l'approche métier retenue : l'évaluation du potentiel d'un café de spécialité peut s'affranchir des phases de dégustation initiales. En s'appuyant uniquement sur l'intégrité physique du lot et son contexte de culture, les acheteurs disposent d'une estimation fiable avant l'importation.
+  L'évaluation du potentiel d'un café de spécialité peut s'affranchir des phases de dégustation initiales : l'intégrité physique du lot et son contexte de culture fournissent une estimation fiable avant l'importation.
 \end{insight}
+
+\subsection{Analyse ciblée : l'effet de l'altitude sur l'acidité selon la région}
+
+Au-delà de la prédiction globale, une seconde modélisation affine la compréhension du lien entre terroir et profil aromatique. Un modèle d'interaction linéaire a été ajusté pour prédire le sous-score \textit{Acidity} en fonction de l'altitude, de la macro-région, et de leur produit croisé :
+
+\begin{equation}
+\text{Acidity} \sim \text{Altitude} + \text{Macro-Région} + \text{Altitude} \times \text{Macro-Région}
+\end{equation}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figures/graphique_interaction_macro_regions.png}
+  \caption{Effet de l'altitude sur l'acidité selon la macro-région de production. Les pentes hétérogènes montrent que l'altitude n'a pas le même impact selon le continent.}
+  \label{fig:interaction_acidite}
+\end{figure}
+
+La Figure~\ref{fig:interaction_acidite} met en évidence une dissociation nette entre les trois macro-régions. En Afrique, l'acidité augmente sensiblement avec l'altitude, ce qui correspond aux conditions bioclimatiques des hauts plateaux est-africains. En Asie-Pacifique, la pente est quasi nulle : l'acidité reste stable quelle que soit l'altitude. Dans les Amériques, la tendance est intermédiaire. Ce résultat montre que la relation altitude--qualité, souvent présentée comme universelle, est en réalité conditionnée par le contexte climatique régional.
+
+Le modèle atteint un $R^2 = 0.219$. Bien que modeste, cette valeur est cohérente avec la nature très locale et multifactorielle de l'acidité. L'apport clé de cette analyse est moins prédictif qu'\textbf{explicatif} : elle démontre que l'interaction géographie $\times$ altitude capte une information que ni l'altitude seule ni la région seule ne peuvent exprimer.
 % ============================================================
 \section{Conclusion}
 % ============================================================
@@ -417,6 +404,7 @@ Notre analyse du dataset CQI Arabica apporte des réponses concrètes à la ques
   \item \textbf{L'importance vitale de l'intégrité physique :} Les défauts (notamment les Quakers et ceux de catégorie 2) appliquent une pénalité sévère et quasi-immédiate sur la note finale. Le tri visuel et physique reste la première barrière d'entrée vers la spécialité.
   \item \textbf{La prime au Terroir et à la Botanique :} L'origine géographique et la génétique (les variétés comme le \textit{Gesha} ou le \textit{Typica}) agissent comme d'importants "boosters" de score, offrant une prime naturelle à certains lots.
   \item \textbf{L'effet de l'altitude :} Une altitude élevée (notamment l'effet de seuil au-delà de 1800\,m) est statistiquement associée à des scores supérieurs, ce qui corrobore le principe agronomique d'une maturation ralentie des cerises.
+  \item \textbf{L'interaction altitude--géographie :} L'analyse par macro-régions révèle que l'effet de l'altitude sur l'acidité n'est pas universel : il est fort en Afrique, quasi inexistant en Asie-Pacifique et intermédiaire dans les Amériques. Cette dissociation remet en question la vision d'un lien altitude--qualité uniforme et souligne l'importance des conditions bioclimatiques locales.
 \end{enumerate}
 
 \subsection{Limites et perspectives}
